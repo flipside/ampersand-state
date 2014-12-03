@@ -393,6 +393,14 @@ _.extend(Base.prototype, BBEvents, {
 
                 if (self._cache[name] !== newVal || !def.cache) {
                     if (def.cache) {
+                        // optionally set listeners on property
+                        if (def.listen) {
+                            // stop listening to any cached property
+                            if (self._cache[name])
+                                self.stopListening(self._cache[name]);
+                            // bubble events
+                            self.listenTo(newVal, def.listen, self._getEventBubblingHandler(name));
+                        }
                         self._previousAttributes[name] = self._cache[name];
                     }
                     self._cache[name] = newVal;
@@ -557,6 +565,7 @@ function createDerivedProperty(modelProto, name, definition) {
     var def = modelProto._derived[name] = {
         fn: _.isFunction(definition) ? definition : definition.fn,
         cache: (definition.cache !== false),
+        listen: (definition.cache !== false && (_.isString(definition.listen) && definition.listen || definition.listen && 'all')),
         depList: definition.deps || []
     };
 
